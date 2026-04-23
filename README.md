@@ -6,6 +6,10 @@ A Retrieval-Augmented Generation (RAG) system designed to answer questions about
 
 This application is a full-stack web application that enables users to query course materials and receive intelligent, context-aware responses. It uses ChromaDB for vector storage, Zhipu/Z.ai GLM models for AI generation, and provides a web interface for interaction.
 
+The files in `docs/` are raw course-material transcripts used as the RAG corpus.
+Any provider or model names that appear there are source content only; the
+application itself uses the Zhipu/Z.ai configuration described below.
+
 
 ## Prerequisites
 
