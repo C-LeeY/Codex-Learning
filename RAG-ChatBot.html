@@ -75,10 +75,44 @@
       font-size: 19px;
     }
 
+    .view-switcher {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .view-button {
+      min-width: 132px;
+      padding: 12px 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--text);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .view-button.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #ffffff;
+    }
+
     main {
       width: min(1120px, calc(100% - 40px));
       margin: 0 auto;
       padding: 34px 0 70px;
+    }
+
+    .view-panel {
+      display: none;
+    }
+
+    .view-panel.active {
+      display: block;
     }
 
     .summary-grid {
@@ -184,11 +218,33 @@
       color: var(--accent-strong);
     }
 
+    .mermaid {
+      width: 100%;
+      overflow-x: auto;
+      margin: 18px 0 0;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
     .note {
       padding: 14px 16px;
       border-left: 4px solid var(--accent);
       background: var(--soft);
       color: #164e49;
+    }
+
+    .process-step {
+      padding: 18px 20px;
+      margin: 0 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .process-step h3 {
+      margin-top: 0;
     }
 
     footer {
@@ -228,10 +284,15 @@
         一个面向课程材料的检索增强生成应用：把课程文稿切分、向量化、持久化，
         再通过网页聊天界面回答用户关于课程内容的问题。
       </p>
+      <div class="view-switcher" role="tablist" aria-label="文档内容切换">
+        <button class="view-button active" type="button" data-view-target="overview-panel" aria-selected="true">项目概述</button>
+        <button class="view-button" type="button" data-view-target="process-panel" aria-selected="false">项目调用流程</button>
+      </div>
     </div>
   </header>
 
   <main>
+    <div id="overview-panel" class="view-panel active">
     <div class="summary-grid" aria-label="项目概览">
       <div class="summary-card">
         <strong>后端</strong>
@@ -305,6 +366,41 @@
         查询时，系统会把问题包装成课程问答 prompt。模型如果判断需要课程材料，会调用
         <code>search_course_content</code>，该工具在 ChromaDB 中做语义搜索，并把相关内容返回给模型。
       </p>
+    </section>
+
+    <section>
+      <h2>Mermaid 架构图</h2>
+      <pre class="mermaid">flowchart LR
+    User[用户] --> Browser[浏览器前端&lt;br/&gt;frontend/index.html&lt;br/&gt;frontend/script.js]
+
+    Browser -->|GET /| Static[FastAPI 静态文件服务]
+    Browser -->|GET /api/courses| CoursesAPI[课程统计接口&lt;br/&gt;backend/app.py]
+    Browser -->|POST /api/query| QueryAPI[问答接口&lt;br/&gt;backend/app.py]
+
+    CoursesAPI --> RAG[RAGSystem&lt;br/&gt;backend/rag_system.py]
+    QueryAPI --> RAG
+
+    RAG --> Processor[DocumentProcessor&lt;br/&gt;解析课程文稿和 lesson]
+    RAG --> Sessions[SessionManager&lt;br/&gt;内存会话历史]
+    RAG --> Generator[AIGenerator&lt;br/&gt;Zhipu/Z.ai GLM 调用]
+    RAG --> Tools[ToolManager / CourseSearchTool&lt;br/&gt;search_course_content]
+    RAG --> Store[VectorStore&lt;br/&gt;ChromaDB 访问层]
+
+    Docs[(docs/&lt;br/&gt;课程语料)] --> Processor
+    Processor -->|Course / Lesson / CourseChunk| Store
+    Tools --> Store
+
+    Store --> Catalog[(course_catalog&lt;br/&gt;课程元数据)]
+    Store --> Content[(course_content&lt;br/&gt;课程内容 chunks)]
+    Store --> Embedding[SentenceTransformer&lt;br/&gt;all-MiniLM-L6-v2]
+
+    Generator -->|chat.completions.create| ZAI[Zhipu/Z.ai GLM API]
+    Generator -->|function calling| Tools
+    Tools -->|检索结果| Generator
+    ZAI -->|最终回答| Generator
+    Generator --> RAG
+    RAG --> QueryAPI
+    QueryAPI --> Browser</pre>
     </section>
 
     <section>
@@ -426,10 +522,303 @@ http://127.0.0.1:8000/api/courses</code></pre>
         不代表应用本身依赖这些供应商。项目运行时使用的是 Zhipu/Z.ai 配置。
       </p>
     </section>
+    </div>
+
+    <div id="process-panel" class="view-panel">
+      <section>
+        <h2>项目调用流程</h2>
+        <p>
+          这一部分专门跟踪“用户从前端提出问题，到后端如何一步步处理并返回答案”的完整路径。
+          我们沿着真实代码走，不讲抽象概念，直接对应到文件和职责。
+        </p>
+      </section>
+
+      <section>
+        <h2>总览</h2>
+        <p>
+          整条链路可以概括成一句话：
+          用户在前端输入问题，前端把问题发给 <code>/api/query</code>，
+          FastAPI 接住后交给 <code>RAGSystem</code>，
+          然后由模型决定是否调用课程搜索工具，
+          检索命中后再生成最终回答，最后把答案和来源返回前端显示。
+        </p>
+      </section>
+
+      <section>
+        <h2>详细步骤</h2>
+
+        <div class="process-step">
+          <h3>1. 页面初始化</h3>
+          <p>
+            页面加载后，前端脚本会绑定发送按钮、回车事件和推荐问题按钮，
+            然后初始化欢迎消息，并调用 <code>/api/courses</code> 加载课程数量和课程标题。
+            这时前端里的 <code>currentSessionId</code> 还是 <code>null</code>。
+          </p>
+          <p>
+            作用很简单：把聊天环境先搭好，但还没有真正开始问答。
+          </p>
+        </div>
+
+        <div class="process-step">
+          <h3>2. 用户在前端发起问题</h3>
+          <p>
+            用户点击发送按钮，或者在输入框按回车，会触发前端的
+            <code>sendMessage()</code>。这个函数会先取输入内容，去掉首尾空格，
+            然后立刻把用户消息插入聊天区，再显示一个 loading 气泡。
+          </p>
+          <p>
+            之后前端调用：
+          </p>
+          <pre><code>POST /api/query</code></pre>
+          <p>请求体包含两个字段：</p>
+          <pre><code>{
+  "query": "用户输入的问题",
+  "session_id": currentSessionId
+}</code></pre>
+          <p>
+            如果这是第一次提问，<code>session_id</code> 就是空值；
+            如果用户已经连续问了几轮，就会带上之前后端返回的 session。
+          </p>
+        </div>
+
+        <div class="process-step">
+          <h3>3. FastAPI 接收请求</h3>
+          <p>
+            后端在 <code>backend/app.py</code> 里定义了 <code>/api/query</code> 接口。
+            它先把请求解析成 <code>QueryRequest</code>，里面只有
+            <code>query</code> 和可选的 <code>session_id</code>。
+          </p>
+          <p>
+            处理逻辑是：
+          </p>
+          <ul>
+            <li>如果请求里没有 session，就创建一个新的会话 ID。</li>
+            <li>调用 <code>rag_system.query(request.query, session_id)</code>。</li>
+            <li>把结果包装成 <code>answer</code>、<code>sources</code>、<code>session_id</code> 返回前端。</li>
+          </ul>
+          <p>
+            这里 FastAPI 本身不负责检索，也不负责生成回答，它只是把请求安全地转交给 RAG 编排层。
+          </p>
+        </div>
+
+        <div class="process-step">
+          <h3>4. RAGSystem 进入问答编排</h3>
+          <p>
+            真正的问答主流程在 <code>backend/rag_system.py</code> 的
+            <code>query()</code> 方法里。它会先把用户问题包装成课程问答 prompt，
+            大意是“回答这个关于课程材料的问题”。
+          </p>
+          <p>
+            接着它会去 <code>SessionManager</code> 里取当前会话的最近几轮对话，
+            把这些历史上下文一并交给模型生成器。
+          </p>
+          <p>
+            这里的几个关键对象是：
+          </p>
+          <ul>
+            <li><code>DocumentProcessor</code>：负责课程文稿解析和切分。</li>
+            <li><code>VectorStore</code>：负责 ChromaDB 向量检索。</li>
+            <li><code>AIGenerator</code>：负责调用 Zhipu/Z.ai GLM。</li>
+            <li><code>ToolManager</code>：负责把课程搜索工具暴露给模型。</li>
+            <li><code>SessionManager</code>：负责保存会话历史。</li>
+          </ul>
+        </div>
+
+        <div class="process-step">
+          <h3>5. AIGenerator 组织消息并调用 GLM</h3>
+          <p>
+            <code>AIGenerator.generate_response()</code> 会把系统提示词、
+            当前问题和会话历史组织成 <code>messages</code>。
+            系统提示词里已经明确约束了模型：
+          </p>
+          <ul>
+            <li>普通问题可以直接回答。</li>
+            <li>课程相关问题优先搜索再回答。</li>
+            <li>每次最多做一次搜索。</li>
+            <li>不要把内部搜索过程讲给用户听。</li>
+          </ul>
+          <p>
+            如果当前传入了工具定义，它还会把 <code>tools</code> 和
+            <code>tool_choice="auto"</code> 一起传给模型。
+            这意味着：是否检索，不是后端硬编码决定，而是由模型基于提示词自行判断。
+          </p>
+        </div>
+
+        <div class="process-step">
+          <h3>6. 模型决定是否调用搜索工具</h3>
+          <p>
+            第一次调用 Zhipu/Z.ai 后，会出现两种结果：
+          </p>
+          <ul>
+            <li>模型直接返回文字回答，不调用工具。</li>
+            <li>模型返回 <code>tool_calls</code>，要求执行 <code>search_course_content</code>。</li>
+          </ul>
+          <p>
+            如果没有工具调用，流程就很短：后端直接把模型回答返回。
+            如果有工具调用，就进入真正的 RAG 检索阶段。
+          </p>
+        </div>
+
+        <div class="process-step">
+          <h3>7. ToolManager 执行课程搜索工具</h3>
+          <p>
+            后端暴露给模型的核心工具是：
+          </p>
+          <pre><code>search_course_content(query, course_name?, lesson_number?)</code></pre>
+          <p>
+            这个工具定义在 <code>backend/search_tools.py</code> 中。
+            模型可以只传查询词，也可以额外指定课程名和 lesson 编号。
+          </p>
+          <p>
+            工具执行时会调用 <code>VectorStore.search()</code>，
+            也就是把“自然语言问题”转成向量检索请求。
+          </p>
+        </div>
+
+        <div class="process-step">
+          <h3>8. VectorStore 在 ChromaDB 中检索</h3>
+          <p>
+            <code>VectorStore</code> 维护两个 collection：
+          </p>
+          <ul>
+            <li><code>course_catalog</code>：课程标题、讲师、lesson 列表等元数据。</li>
+            <li><code>course_content</code>：真正参与语义检索的课程内容 chunks。</li>
+          </ul>
+          <p>
+            当模型带了 <code>course_name</code> 进来时，系统会先在
+            <code>course_catalog</code> 里做一次“课程名解析”。
+            这一步是为了支持模糊匹配，比如用户只说 “MCP 那门课”，
+            系统也能匹配到完整课程标题。
+          </p>
+          <p>
+            然后它根据课程名和 lesson 编号构建过滤条件，
+            再去 <code>course_content</code> 里做真正的向量检索，
+            取回命中的文档片段、元数据和距离分数。
+          </p>
+        </div>
+
+        <div class="process-step">
+          <h3>9. 搜索结果被格式化并回传给模型</h3>
+          <p>
+            搜索工具不会直接把原始 Chroma 结果交给前端，而是先把结果格式化成模型更容易用的文本。
+            每一条命中内容前面都会加上类似下面的上下文头：
+          </p>
+          <pre><code>[课程标题 - Lesson 3]</code></pre>
+          <p>
+            同时，工具还会顺手记录一份 <code>sources</code> 列表，
+            例如“某课程 - Lesson 3”。这份 sources 稍后会被前端显示出来，
+            所以它不是模型随便写的，而是检索工具真实产生的结果。
+          </p>
+        </div>
+
+        <div class="process-step">
+          <h3>10. 模型基于检索结果生成最终回答</h3>
+          <p>
+            当工具执行完之后，<code>AIGenerator</code> 会把工具结果作为
+            一条 <code>role="tool"</code> 的消息追加回对话，再次调用 Zhipu/Z.ai。
+          </p>
+          <p>
+            所以这里其实是两段式生成：
+          </p>
+          <ol>
+            <li>第一次问模型：要不要检索。</li>
+            <li>第二次问模型：基于检索结果生成最终答案。</li>
+          </ol>
+          <p>
+            这也是这个项目的核心 RAG 模式。
+          </p>
+        </div>
+
+        <div class="process-step">
+          <h3>11. RAGSystem 收尾：sources 与会话历史</h3>
+          <p>
+            当最终回答返回后，<code>RAGSystem</code> 会做三件小但关键的事：
+          </p>
+          <ul>
+            <li>从工具管理器取出本轮检索生成的 <code>sources</code>。</li>
+            <li>清空工具内部缓存，避免下次串数据。</li>
+            <li>把“用户问题 + AI 回答”写入 <code>SessionManager</code>。</li>
+          </ul>
+          <p>
+            这意味着后面用户继续追问时，模型可以拿到最近几轮上下文，
+            但这个上下文只保存在内存里，服务重启后会消失。
+          </p>
+        </div>
+
+        <div class="process-step">
+          <h3>12. 前端收到响应并渲染结果</h3>
+          <p>
+            FastAPI 返回的 JSON 里包含：
+          </p>
+          <pre><code>{
+  "answer": "...",
+  "sources": ["课程 A - Lesson 2", "课程 B - Lesson 4"],
+  "session_id": "session_1"
+}</code></pre>
+          <p>
+            前端收到后会：
+          </p>
+          <ul>
+            <li>如果当前没有 session，就保存后端返回的 <code>session_id</code>。</li>
+            <li>移除 loading 气泡。</li>
+            <li>把 <code>answer</code> 作为 assistant 消息插入聊天区。</li>
+            <li>如果有 <code>sources</code>，在回答下方渲染一个可折叠来源面板。</li>
+          </ul>
+          <p>
+            助手回答会经过 Markdown 渲染，所以最终看到的是更自然的格式化输出。
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>你可以这样理解整条链路</h2>
+        <p>
+          这个项目不是“前端直接搜数据库”，也不是“后端每次都强制检索”。
+          它更像一个由大模型驱动的课程助手：
+        </p>
+        <ol>
+          <li>前端负责收集问题和展示结果。</li>
+          <li>FastAPI 负责把请求转交给 RAGSystem。</li>
+          <li>RAGSystem 负责组织上下文、工具和检索流程。</li>
+          <li>GLM 负责判断要不要查课程材料，并生成最终答案。</li>
+          <li>ChromaDB 负责提供真正的课程语义检索能力。</li>
+        </ol>
+        <p class="note">
+          换句话说，用户看到的是一次问答，后端实际走的是
+          “会话管理 + 工具调用 + 向量检索 + 二次生成”的组合流程。
+        </p>
+      </section>
+    </div>
   </main>
 
   <footer>
     Generated documentation for RAG-Chatbot.
   </footer>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, theme: "default" });
+  </script>
+  <script>
+    const viewButtons = document.querySelectorAll('[data-view-target]');
+    const viewPanels = document.querySelectorAll('.view-panel');
+
+    function switchView(targetId) {
+      viewPanels.forEach((panel) => {
+        panel.classList.toggle('active', panel.id === targetId);
+      });
+
+      viewButtons.forEach((button) => {
+        const isActive = button.getAttribute('data-view-target') === targetId;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+    }
+
+    viewButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        switchView(button.getAttribute('data-view-target'));
+      });
+    });
+  </script>
 </body>
 </html>
