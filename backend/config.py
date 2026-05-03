@@ -8,9 +8,13 @@ load_dotenv()
 @dataclass
 class Config:
     """Configuration settings for the RAG system"""
-    # Anthropic API settings
-    ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
-    ANTHROPIC_MODEL: str = "claude-sonnet-4-20250514"
+    # Zhipu AI API settings
+    ZHIPU_API_KEY: str = os.getenv("ZHIPU_API_KEY", "")
+    ZHIPU_MODEL: str = os.getenv("ZHIPU_MODEL", "glm-4-flash")
+    ZHIPU_BASE_URL: str = os.getenv(
+        "ZHIPU_BASE_URL",
+        "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+    )
     
     # Embedding model settings
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"

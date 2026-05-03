@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG-ChatBot 代码库说明</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f7f8fa;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --muted: #5f6b7a;
+            --line: #d8dee8;
+            --accent: #2563eb;
+            --code-bg: #eef2f7;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+            line-height: 1.75;
+        }
+
+        main {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 48px 24px 72px;
+        }
+
+        article {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: 34px;
+            line-height: 1.2;
+        }
+
+        h2 {
+            margin: 38px 0 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--line);
+            font-size: 24px;
+        }
+
+        h3 {
+            margin: 28px 0 10px;
+            font-size: 19px;
+        }
+
+        p {
+            margin: 12px 0;
+        }
+
+        ul,
+        ol {
+            padding-left: 24px;
+        }
+
+        li {
+            margin: 6px 0;
+        }
+
+        code {
+            padding: 2px 6px;
+            border-radius: 5px;
+            background: var(--code-bg);
+            font-family: "Cascadia Code", Consolas, monospace;
+            font-size: 0.94em;
+        }
+
+        pre {
+            overflow-x: auto;
+            padding: 16px;
+            border-radius: 8px;
+            background: #111827;
+            color: #e5e7eb;
+            line-height: 1.55;
+        }
+
+        pre code {
+            padding: 0;
+            background: transparent;
+            color: inherit;
+        }
+
+        .lead {
+            margin: 0 0 28px;
+            color: var(--muted);
+            font-size: 17px;
+        }
+
+        .flow {
+            padding: 16px 18px;
+            border-left: 4px solid var(--accent);
+            background: #eff6ff;
+            color: #1e3a8a;
+        }
+
+        .path {
+            color: #0f766e;
+            font-weight: 600;
+        }
+
+        .doc-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 24px 0 28px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .doc-tab {
+            min-height: 40px;
+            padding: 0 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #ffffff;
+            color: var(--text);
+            cursor: pointer;
+            font: inherit;
+            font-weight: 600;
+        }
+
+        .doc-tab:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .doc-tab.active {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: #ffffff;
+        }
+
+        .doc-section {
+            display: none;
+        }
+
+        .doc-section.active {
+            display: block;
+        }
+
+        .process-map {
+            padding: 16px 18px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fbfcfe;
+        }
+
+        .process-map code {
+            white-space: nowrap;
+        }
+
+        .request-flow-figure {
+            margin: 18px 0 30px;
+            padding: 18px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fbfcfe;
+        }
+
+        .request-flow-figure svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .request-flow-figure .box {
+            fill: #ffffff;
+            stroke: #cbd5e1;
+            stroke-width: 1.5;
+        }
+
+        .request-flow-figure .box-accent {
+            fill: #eff6ff;
+            stroke: #2563eb;
+        }
+
+        .request-flow-figure .box-green {
+            fill: #ecfdf5;
+            stroke: #059669;
+        }
+
+        .request-flow-figure .arrow {
+            stroke: #2563eb;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+
+        .request-flow-figure .return-arrow {
+            stroke: #059669;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#green-arrowhead);
+            stroke-dasharray: 6 5;
+        }
+
+        .request-flow-figure text {
+            fill: #1f2937;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+            font-size: 14px;
+        }
+
+        .request-flow-figure .title-text {
+            fill: #0f172a;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .request-flow-figure .small-text {
+            fill: #5f6b7a;
+            font-size: 12px;
+        }
+
+        .request-flow-caption {
+            margin: 12px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        @media (max-width: 720px) {
+            main {
+                padding: 20px 12px 48px;
+            }
+
+            article {
+                padding: 24px 18px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <article>
+            <h1>RAG-ChatBot 代码库详细说明</h1>
+            <p class="lead">
+                本文档说明该代码库的整体定位、启动流程、核心请求链路、主要模块职责，以及当前实现中值得注意的工程细节。
+            </p>
+
+            <div class="doc-tabs" role="tablist" aria-label="文档视图切换">
+                <button class="doc-tab active" type="button" data-target="overview-section" role="tab" aria-selected="true">代码库概述</button>
+                <button class="doc-tab" type="button" data-target="request-process-section" role="tab" aria-selected="false">用户请求处理流程</button>
+            </div>
+
+            <section id="overview-section" class="doc-section active">
+            <h2>整体定位</h2>
+            <p>
+                这个代码库是一个课程资料 RAG 聊天机器人。它把 <code>docs/</code> 里的课程脚本文本读入，切成小块，存到 ChromaDB 向量库里。用户在网页里提问时，后端让智谱 AI 判断是否需要搜索课程内容；如果需要，就调用本地的课程搜索工具，从向量库取相关片段，再让模型基于片段生成回答。
+            </p>
+            <p>技术栈大致如下：</p>
+            <ul>
+                <li>后端：FastAPI</li>
+                <li>前端：原生 HTML、CSS、JavaScript</li>
+                <li>向量数据库：ChromaDB</li>
+                <li>Embedding 模型：<code>all-MiniLM-L6-v2</code></li>
+                <li>生成模型：智谱 <code>glm-4-flash</code>，通过 OpenAI-compatible Chat Completions API 调用</li>
+                <li>包管理：<code>uv</code></li>
+            </ul>
+
+            <h2>启动过程</h2>
+            <p>
+                启动脚本位于 <span class="path">run.sh</span>。它会进入 <code>backend</code> 目录，然后运行：
+            </p>
+            <pre><code>uv run uvicorn app:app --reload --port 8000</code></pre>
+            <p>
+                真正的 FastAPI 入口是 <span class="path">backend/app.py</span>。服务启动后，会执行 <code>startup_event()</code>，扫描 <code>../docs</code> 并把课程资料加载到向量库：
+            </p>
+            <pre><code>docs_path = "../docs"
+courses, chunks = rag_system.add_course_folder(docs_path, clear_existing=False)</code></pre>
+            <p>
+                <code>clear_existing=False</code> 表示不会每次启动都清空重建向量库，而是跳过已经存在的课程。
+            </p>
+
+            <h2>核心请求链路</h2>
+            <ol>
+                <li>前端 <span class="path">frontend/script.js</span> 调用 <code>POST /api/query</code>。</li>
+                <li>后端 <span class="path">backend/app.py</span> 接收 <code>query</code> 和可选的 <code>session_id</code>。</li>
+                <li><code>app.py</code> 调用 <code>rag_system.query(...)</code>。</li>
+                <li><span class="path">backend/rag_system.py</span> 组织会话历史、工具定义和用户问题。</li>
+                <li><span class="path">backend/ai_generator.py</span> 调用智谱模型。</li>
+                <li>如果模型判断需要查课程内容，就触发工具调用 <code>search_course_content</code>。</li>
+                <li><span class="path">backend/search_tools.py</span> 调用向量库搜索。</li>
+                <li><span class="path">backend/vector_store.py</span> 从 ChromaDB 返回相关课程片段。</li>
+                <li>模型拿到工具结果后再生成最终回答。</li>
+                <li>后端返回 <code>{ answer, sources, session_id }</code>。</li>
+                <li>前端展示回答，并把 <code>sources</code> 折叠显示为来源。</li>
+            </ol>
+            <p class="flow">
+                简化后的数据流：<br>
+                <code>docs/*.txt</code> -> 文档解析 -> 文本切块 -> ChromaDB -> 用户提问 -> FastAPI -> 模型判断是否搜索 -> 本地搜索工具 -> 向量检索 -> 模型生成回答 -> 前端展示
+            </p>
+
+            <h2>后端入口：backend/app.py</h2>
+            <p>
+                <span class="path">backend/app.py</span> 负责 Web/API 层。它创建 FastAPI 应用，配置 CORS 和 TrustedHost，初始化全局 <code>rag_system = RAGSystem(config)</code>，并提供两个主要 API：
+            </p>
+            <ul>
+                <li><code>POST /api/query</code>：问答接口。</li>
+                <li><code>GET /api/courses</code>：获取课程数量和课程标题。</li>
+            </ul>
+            <p>
+                它还把前端静态文件挂载到根路径：
+            </p>
+            <pre><code>app.mount("/", StaticFiles(directory="../frontend", html=True), name="static")</code></pre>
+            <p>
+                因此访问 <code>http://localhost:8000</code> 时，实际返回的是 <span class="path">frontend/index.html</span>。
+            </p>
+
+            <h2>RAG 总调度：backend/rag_system.py</h2>
+            <p>
+                <span class="path">backend/rag_system.py</span> 是后端核心编排器。初始化时创建这些组件：
+            </p>
+            <pre><code>self.document_processor = DocumentProcessor(...)
+self.vector_store = VectorStore(...)
+self.ai_generator = AIGenerator(...)
+self.session_manager = SessionManager(...)
+self.tool_manager = ToolManager()
+self.search_tool = CourseSearchTool(self.vector_store)</code></pre>
+            <p>各组件职责如下：</p>
+            <ul>
+                <li><code>DocumentProcessor</code>：解析课程文档并切块。</li>
+                <li><code>VectorStore</code>：负责向量存储和检索。</li>
+                <li><code>AIGenerator</code>：负责调用智谱 AI。</li>
+                <li><code>SessionManager</code>：负责会话历史。</li>
+                <li><code>ToolManager</code>：负责注册和执行搜索工具。</li>
+            </ul>
+            <p>
+                它的 <code>query()</code> 是问答主流程。这个项目不是后端固定每次先搜索再生成，而是把搜索工具交给模型，让模型自己决定是否调用工具：
+            </p>
+            <pre><code>response = self.ai_generator.generate_response(
+    query=prompt,
+    conversation_history=history,
+    tools=self.tool_manager.get_tool_definitions(),
+    tool_manager=self.tool_manager
+)</code></pre>
+            <p>
+                这是一种 tool-calling 风格的 RAG。
+            </p>
+
+            <h2>文档处理：backend/document_processor.py</h2>
+            <p>
+                <span class="path">backend/document_processor.py</span> 负责把课程文本变成结构化课程和 chunk。它假设课程文件格式类似：
+            </p>
+            <pre><code>Course Title: ...
+Course Link: ...
+Course Instructor: ...
+
+Lesson 0: Introduction
+Lesson Link: ...
+正文...</code></pre>
+            <p>主要逻辑包括：</p>
+            <ul>
+                <li><code>read_file()</code>：读取 UTF-8 文本。</li>
+                <li><code>process_course_document()</code>：解析课程标题、链接、讲师、lesson 编号、lesson 标题、lesson 链接。</li>
+                <li><code>chunk_text()</code>：按句子切块，并保留一定 overlap。</li>
+            </ul>
+            <p>
+                切块配置来自 <span class="path">backend/config.py</span>：
+            </p>
+            <pre><code>CHUNK_SIZE = 800
+CHUNK_OVERLAP = 100</code></pre>
+            <p>
+                因此一个 lesson 的正文会被拆成多个适合 embedding 检索的小片段。
+            </p>
+
+            <h2>数据模型：backend/models.py</h2>
+            <p>
+                <span class="path">backend/models.py</span> 定义了三个 Pydantic 模型：
+            </p>
+            <ul>
+                <li><code>Course</code>：课程标题、课程链接、讲师、lesson 列表。</li>
+                <li><code>Lesson</code>：lesson 编号、标题、链接。</li>
+                <li><code>CourseChunk</code>：用于向量库的一段课程文本，以及它属于哪个课程和 lesson。</li>
+            </ul>
+            <p>
+                一个值得注意的点是，<code>Course.lessons: List[Lesson] = []</code> 使用了可变默认值。Pydantic 通常会处理很多这种情况，但更稳妥的写法是 <code>Field(default_factory=list)</code>。
+            </p>
+
+            <h2>向量库：backend/vector_store.py</h2>
+            <p>
+                <span class="path">backend/vector_store.py</span> 负责 ChromaDB 存储和检索。它创建了两个 collection：
+            </p>
+            <pre><code>self.course_catalog = self._create_collection("course_catalog")
+self.course_content = self._create_collection("course_content")</code></pre>
+            <p>两者职责不同：</p>
+            <ul>
+                <li><code>course_catalog</code>：存课程级别元数据，例如课程标题、讲师、课程链接、lesson 列表。</li>
+                <li><code>course_content</code>：存真正用于问答检索的课程 chunk。</li>
+            </ul>
+            <p>搜索流程如下：</p>
+            <ol>
+                <li>如果提供了 <code>course_name</code>，先在 <code>course_catalog</code> 中语义匹配最接近的课程标题。</li>
+                <li>根据匹配到的课程标题和可选 <code>lesson_number</code> 构造 ChromaDB filter。</li>
+                <li>在 <code>course_content</code> 中做向量搜索。</li>
+                <li>返回 <code>SearchResults</code>。</li>
+            </ol>
+            <p>
+                因此它支持“某门课讲了什么”“lesson 5 讲了什么”“哪个课程提到了 RAG”等问题。
+            </p>
+
+            <h2>搜索工具：backend/search_tools.py</h2>
+            <p>
+                <span class="path">backend/search_tools.py</span> 是模型 tool calling 的桥梁。<code>CourseSearchTool</code> 暴露给模型的工具名是：
+            </p>
+            <pre><code>search_course_content</code></pre>
+            <p>工具参数包括：</p>
+            <ul>
+                <li><code>query</code>：要搜索的内容，必填。</li>
+                <li><code>course_name</code>：课程名，可选。</li>
+                <li><code>lesson_number</code>：lesson 编号，可选。</li>
+            </ul>
+            <p>
+                模型看到工具定义后，可以生成类似这样的工具调用：
+            </p>
+            <pre><code>{
+    "query": "RAG",
+    "course_name": "MCP",
+    "lesson_number": 5
+}</code></pre>
+            <p>
+                然后 <code>ToolManager.execute_tool()</code> 会真正执行本地 Python 函数，调用 <code>VectorStore.search()</code>。
+            </p>
+            <p>
+                <code>CourseSearchTool</code> 还会保存 <code>last_sources</code>。这些来源最后会通过 API 返回给前端显示，例如：
+            </p>
+            <pre><code>MCP: Build Rich-Context AI Apps with Anthropic - Lesson 5</code></pre>
+
+            <h2>模型调用：backend/ai_generator.py</h2>
+            <p>
+                <span class="path">backend/ai_generator.py</span> 负责和智谱 API 通信。这里没有使用官方 SDK，而是使用标准库 <code>urllib.request</code>。
+            </p>
+            <p>调用地址是：</p>
+            <pre><code>https://open.bigmodel.cn/api/paas/v4/chat/completions</code></pre>
+            <p>它主要做三件事：</p>
+            <ol>
+                <li>构造 system prompt，告诉模型什么时候搜索、什么时候直接回答。</li>
+                <li>把本地工具定义转换成 Zhipu/OpenAI function tool 格式。</li>
+                <li>如果模型返回 <code>tool_calls</code>，就执行工具，然后再发起第二次模型请求生成最终答案。</li>
+            </ol>
+            <p>
+                因此一次课程相关提问通常会发生两次模型请求：第一次让模型判断是否调用搜索工具，第二次让模型基于搜索结果生成答案。
+            </p>
+
+            <h2>会话管理：backend/session_manager.py</h2>
+            <p>
+                <span class="path">backend/session_manager.py</span> 是一个内存里的简单 session 管理器。它会给新用户创建：
+            </p>
+            <pre><code>session_1
+session_2
+...</code></pre>
+            <p>
+                每个 session 保存最近几轮对话。配置为 <code>MAX_HISTORY = 2</code>，因为每轮包含 user 和 assistant 两条消息，所以最多保留最近 4 条消息。
+            </p>
+            <p>
+                需要注意的是，这是内存存储。服务重启后 session 会丢失，也不适合多进程部署时共享状态。
+            </p>
+
+            <h2>前端</h2>
+            <p>前端由三个文件组成：</p>
+            <ul>
+                <li><span class="path">frontend/index.html</span>：页面结构。</li>
+                <li><span class="path">frontend/style.css</span>：样式。</li>
+                <li><span class="path">frontend/script.js</span>：聊天逻辑。</li>
+            </ul>
+            <p>
+                页面左侧显示课程数量和建议问题，右侧是聊天窗口。<code>script.js</code> 中，页面加载后调用 <code>GET /api/courses</code>，用户发送消息时调用 <code>POST /api/query</code>。Assistant 消息使用 <code>marked.parse()</code> 渲染 Markdown，sources 会显示在折叠区域里。
+            </p>
+
+            <h2>配置</h2>
+            <p>
+                <span class="path">backend/config.py</span> 读取项目根目录中的 <code>.env</code>：
+            </p>
+            <pre><code>ZHIPU_API_KEY=...
+ZHIPU_MODEL=glm-4-flash</code></pre>
+            <p>其他关键配置：</p>
+            <pre><code>EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+CHROMA_PATH = "./chroma_db"
+MAX_RESULTS = 5</code></pre>
+            <p>
+                因为服务是从 <code>backend</code> 目录启动的，所以 <code>./chroma_db</code> 实际会落在 <code>backend/chroma_db</code>。
+            </p>
+
+            <h2>值得注意的工程细节</h2>
+            <ul>
+                <li><code>SessionManager</code> 是内存存储，重启会丢历史。</li>
+                <li><code>Course.lessons = []</code> 建议改为 <code>Field(default_factory=list)</code>。</li>
+                <li><code>document_processor.py</code> 目前主要支持文本格式，虽然代码判断了 <code>.pdf</code> 和 <code>.docx</code>，但读取逻辑仍是普通文本读取。</li>
+                <li><code>app.py</code> 里定义了 <code>DevStaticFiles</code>，但最终挂载时用的还是普通 <code>StaticFiles</code>。</li>
+                <li>API key 缺失时会在真正请求模型时才报错。</li>
+                <li>首次启动可能需要下载 sentence-transformers embedding 模型，环境没缓存时会比较慢。</li>
+            </ul>
+
+            <h2>总结</h2>
+            <p>
+                整体来说，这是一个“工具调用式 RAG”项目：不是后端硬编码每次都搜索，而是把课程搜索能力注册成工具，让模型在回答时自主调用。这个设计比固定 pipeline 灵活，但也更依赖 system prompt 和模型的 tool-calling 稳定性。
+            </p>
+            </section>
+
+            <section id="request-process-section" class="doc-section">
+                <h2>用户请求处理流程</h2>
+                <p>
+                    下面按真实执行顺序跟踪一次用户请求。假设用户在网页输入：<code>Are there any courses that explain what RAG is?</code>
+                </p>
+
+                <figure class="request-flow-figure" aria-labelledby="request-flow-title">
+                    <svg viewBox="0 0 980 620" role="img">
+                        <title id="request-flow-title">用户请求处理流程图</title>
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                                <path d="M0,0 L0,6 L8,3 z" fill="#2563eb"></path>
+                            </marker>
+                            <marker id="green-arrowhead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                                <path d="M0,0 L0,6 L8,3 z" fill="#059669"></path>
+                            </marker>
+                        </defs>
+
+                        <rect class="box box-accent" x="30" y="40" width="190" height="88" rx="8"></rect>
+                        <text class="title-text" x="125" y="72" text-anchor="middle">1. 浏览器前端</text>
+                        <text class="small-text" x="125" y="96" text-anchor="middle">frontend/script.js</text>
+                        <text class="small-text" x="125" y="114" text-anchor="middle">sendMessage()</text>
+
+                        <rect class="box" x="285" y="40" width="190" height="88" rx="8"></rect>
+                        <text class="title-text" x="380" y="72" text-anchor="middle">2. FastAPI</text>
+                        <text class="small-text" x="380" y="96" text-anchor="middle">POST /api/query</text>
+                        <text class="small-text" x="380" y="114" text-anchor="middle">query_documents()</text>
+
+                        <rect class="box" x="540" y="40" width="190" height="88" rx="8"></rect>
+                        <text class="title-text" x="635" y="72" text-anchor="middle">3. RAGSystem</text>
+                        <text class="small-text" x="635" y="96" text-anchor="middle">query()</text>
+                        <text class="small-text" x="635" y="114" text-anchor="middle">组织历史 + 工具</text>
+
+                        <rect class="box" x="540" y="210" width="190" height="88" rx="8"></rect>
+                        <text class="title-text" x="635" y="242" text-anchor="middle">4. AI 生成器</text>
+                        <text class="small-text" x="635" y="266" text-anchor="middle">AIGenerator</text>
+                        <text class="small-text" x="635" y="284" text-anchor="middle">调用智谱 API</text>
+
+                        <rect class="box" x="285" y="210" width="190" height="88" rx="8"></rect>
+                        <text class="title-text" x="380" y="242" text-anchor="middle">5. 模型判断</text>
+                        <text class="small-text" x="380" y="266" text-anchor="middle">是否需要 tool_calls</text>
+                        <text class="small-text" x="380" y="284" text-anchor="middle">课程问题则检索</text>
+
+                        <rect class="box" x="30" y="210" width="190" height="88" rx="8"></rect>
+                        <text class="title-text" x="125" y="242" text-anchor="middle">6. 搜索工具</text>
+                        <text class="small-text" x="125" y="266" text-anchor="middle">CourseSearchTool</text>
+                        <text class="small-text" x="125" y="284" text-anchor="middle">search_course_content</text>
+
+                        <rect class="box" x="30" y="380" width="190" height="88" rx="8"></rect>
+                        <text class="title-text" x="125" y="412" text-anchor="middle">7. 向量检索</text>
+                        <text class="small-text" x="125" y="436" text-anchor="middle">VectorStore.search()</text>
+                        <text class="small-text" x="125" y="454" text-anchor="middle">构造过滤条件</text>
+
+                        <rect class="box" x="285" y="380" width="190" height="88" rx="8"></rect>
+                        <text class="title-text" x="380" y="412" text-anchor="middle">8. ChromaDB</text>
+                        <text class="small-text" x="380" y="436" text-anchor="middle">course_content.query()</text>
+                        <text class="small-text" x="380" y="454" text-anchor="middle">返回课程 chunk</text>
+
+                        <rect class="box" x="540" y="380" width="190" height="88" rx="8"></rect>
+                        <text class="title-text" x="635" y="412" text-anchor="middle">9. 最终回答</text>
+                        <text class="small-text" x="635" y="436" text-anchor="middle">第二次模型调用</text>
+                        <text class="small-text" x="635" y="454" text-anchor="middle">生成 answer</text>
+
+                        <rect class="box box-green" x="770" y="210" width="180" height="88" rx="8"></rect>
+                        <text class="title-text" x="860" y="242" text-anchor="middle">10. 返回前端</text>
+                        <text class="small-text" x="860" y="266" text-anchor="middle">answer / sources</text>
+                        <text class="small-text" x="860" y="284" text-anchor="middle">session_id</text>
+
+                        <path class="arrow" d="M220 84 H285"></path>
+                        <path class="arrow" d="M475 84 H540"></path>
+                        <path class="arrow" d="M635 128 V210"></path>
+                        <path class="arrow" d="M540 254 H475"></path>
+                        <path class="arrow" d="M285 254 H220"></path>
+                        <path class="arrow" d="M125 298 V380"></path>
+                        <path class="arrow" d="M220 424 H285"></path>
+                        <path class="arrow" d="M475 424 H540"></path>
+                        <path class="arrow" d="M730 424 C805 424 860 360 860 298"></path>
+                        <path class="return-arrow" d="M770 254 C705 160 350 150 125 128"></path>
+
+                        <text class="small-text" x="252" y="70" text-anchor="middle">请求</text>
+                        <text class="small-text" x="508" y="70" text-anchor="middle">调用</text>
+                        <text class="small-text" x="505" y="240" text-anchor="middle">tool_calls</text>
+                        <text class="small-text" x="252" y="410" text-anchor="middle">查询</text>
+                        <text class="small-text" x="508" y="410" text-anchor="middle">片段</text>
+                        <text class="small-text" x="610" y="548" text-anchor="middle">绿色虚线表示 JSON 结果回到前端并渲染</text>
+                    </svg>
+                    <figcaption class="request-flow-caption">
+                        蓝色箭头表示请求和工具调用向前推进；绿色虚线表示最终 JSON 响应回到浏览器，前端渲染回答和来源。
+                    </figcaption>
+                </figure>
+
+                <h3>0. 服务启动前置</h3>
+                <p>
+                    服务由 <code>run.sh</code> 启动：
+                </p>
+                <pre><code>cd backend && uv run uvicorn app:app --reload --port 8000</code></pre>
+                <p>
+                    FastAPI 入口是 <code>backend/app.py</code>。这里会先创建全局对象：
+                </p>
+                <pre><code>rag_system = RAGSystem(config)</code></pre>
+                <p>
+                    <code>RAGSystem</code> 初始化时创建文档处理器、向量库、AI 生成器、会话管理器和课程搜索工具。服务启动后，<code>startup_event()</code> 会读取 <code>../docs</code>，调用 <code>rag_system.add_course_folder(...)</code> 加载课程资料。
+                </p>
+
+                <h3>1. 前端发起请求</h3>
+                <p>
+                    用户点击发送按钮后，触发 <code>frontend/script.js</code> 中的 <code>sendMessage()</code>。它会读取输入框内容，清空输入框并禁用按钮，把用户消息追加到页面，显示 loading 动画，然后发送请求到后端：
+                </p>
+                <pre><code>fetch(`${API_URL}/query`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        query: query,
+        session_id: currentSessionId
+    })
+})</code></pre>
+                <p>
+                    这里 <code>API_URL = '/api'</code>，所以实际请求是 <code>POST /api/query</code>。
+                </p>
+
+                <h3>2. FastAPI 接收请求</h3>
+                <p>
+                    后端由 <code>backend/app.py</code> 的 <code>query_documents()</code> 接收请求：
+                </p>
+                <pre><code>@app.post("/api/query", response_model=QueryResponse)
+async def query_documents(request: QueryRequest):</code></pre>
+                <p>
+                    请求体会被 Pydantic 解析成 <code>QueryRequest</code>，包含 <code>query</code> 和可选的 <code>session_id</code>。如果前端没有传 <code>session_id</code>，后端会新建一个，然后进入核心处理：
+                </p>
+                <pre><code>answer, sources = rag_system.query(request.query, session_id)</code></pre>
+
+                <h3>3. RAGSystem 组织上下文</h3>
+                <p>
+                    <code>rag_system.query()</code> 先把用户问题包装成 prompt：
+                </p>
+                <pre><code>prompt = f"""Answer this question about course materials: {query}"""</code></pre>
+                <p>
+                    如果有 session，就从 <code>SessionManager</code> 取历史对话。随后调用 AI 生成器：
+                </p>
+                <pre><code>response = self.ai_generator.generate_response(
+    query=prompt,
+    conversation_history=history,
+    tools=self.tool_manager.get_tool_definitions(),
+    tool_manager=self.tool_manager
+)</code></pre>
+                <p>
+                    这里的关键是：后端不是自己直接搜索，而是把搜索工具定义传给模型，让模型决定是否调用工具。
+                </p>
+
+                <h3>4. AIGenerator 调用模型</h3>
+                <p>
+                    <code>AIGenerator.generate_response()</code> 会构造 system prompt、用户消息、tools，并设置 <code>tool_choice = "auto"</code>。工具定义由 <code>backend/search_tools.py</code> 提供，工具名是 <code>search_course_content</code>。
+                </p>
+                <p>
+                    随后它调用智谱 Chat Completions API：
+                </p>
+                <pre><code>https://open.bigmodel.cn/api/paas/v4/chat/completions</code></pre>
+
+                <h3>5. 模型决定是否调用搜索工具</h3>
+                <p>
+                    如果模型认为这是课程相关问题，就会返回 <code>tool_calls</code>。代码判断到工具调用后，进入 <code>_handle_tool_execution()</code>：
+                </p>
+                <pre><code>if message.get("tool_calls") and tool_manager:
+    return self._handle_tool_execution(message, api_params, tool_manager)</code></pre>
+                <p>
+                    模型可能生成这样的工具调用：
+                </p>
+                <pre><code>{
+    "name": "search_course_content",
+    "arguments": {
+        "query": "RAG"
+    }
+}</code></pre>
+
+                <h3>6. ToolManager 执行搜索工具</h3>
+                <p>
+                    <code>ToolManager.execute_tool()</code> 根据工具名找到 <code>CourseSearchTool</code>，然后执行：
+                </p>
+                <pre><code>results = self.store.search(
+    query=query,
+    course_name=course_name,
+    lesson_number=lesson_number
+)</code></pre>
+
+                <h3>7. VectorStore 向量检索</h3>
+                <p>
+                    <code>VectorStore.search()</code> 的检索流程是：如果有 <code>course_name</code>，先匹配真实课程标题；再根据课程标题和 <code>lesson_number</code> 构造过滤条件；最后查询 <code>course_content</code> collection：
+                </p>
+                <pre><code>results = self.course_content.query(
+    query_texts=[query],
+    n_results=search_limit,
+    where=filter_dict
+)</code></pre>
+                <p>
+                    这一步会用 embedding 模型把 query 转成向量，再从 ChromaDB 中找最相近的课程 chunk。
+                </p>
+
+                <h3>8. 搜索结果格式化</h3>
+                <p>
+                    搜索结果回到 <code>CourseSearchTool._format_results()</code>，被格式化成课程标题、lesson 编号和文本片段。同时工具会保存 <code>last_sources</code>，用于前端显示来源。
+                </p>
+
+                <h3>9. 工具结果回到模型</h3>
+                <p>
+                    工具结果不会直接返回用户，而是追加到模型消息里，然后发起第二次模型调用。这次不再传 tools，而是让模型基于检索到的课程片段生成最终自然语言回答。
+                </p>
+
+                <h3>10. RAGSystem 收尾</h3>
+                <p>
+                    回答回到 <code>RAGSystem</code> 后，它取出搜索工具记录的来源，清空来源缓存，并把本轮问答加入 session 历史：
+                </p>
+                <pre><code>sources = self.tool_manager.get_last_sources()
+self.tool_manager.reset_sources()
+self.session_manager.add_exchange(session_id, query, response)</code></pre>
+
+                <h3>11. FastAPI 返回 JSON</h3>
+                <p>
+                    接口包装响应并返回给前端：
+                </p>
+                <pre><code>return QueryResponse(
+    answer=answer,
+    sources=sources,
+    session_id=session_id
+)</code></pre>
+                <p>
+                    前端收到的 JSON 类似：
+                </p>
+                <pre><code>{
+  "answer": "课程中关于 RAG 的解释是...",
+  "sources": ["某课程标题 - Lesson 3"],
+  "session_id": "session_1"
+}</code></pre>
+
+                <h3>12. 前端渲染结果</h3>
+                <p>
+                    前端收到响应后保存新的 <code>session_id</code>，删除 loading 消息，然后调用 <code>addMessage(data.answer, 'assistant', data.sources)</code>。<code>addMessage()</code> 会用 <code>marked.parse()</code> 渲染 assistant 的 Markdown；如果有 <code>sources</code>，会追加一个折叠的来源区域，并滚动到底部。
+                </p>
+
+                <h3>总流程</h3>
+                <pre class="process-map"><code>用户输入
+  -> frontend/script.js sendMessage()
+  -> POST /api/query
+  -> backend/app.py query_documents()
+  -> RAGSystem.query()
+  -> SessionManager 取历史
+  -> AIGenerator.generate_response()
+  -> 智谱模型第一次调用
+  -> 模型按需返回 tool_calls
+  -> ToolManager.execute_tool()
+  -> CourseSearchTool.execute()
+  -> VectorStore.search()
+  -> ChromaDB 返回课程 chunk
+  -> CourseSearchTool 格式化结果并记录 sources
+  -> 智谱模型第二次调用生成最终回答
+  -> RAGSystem 保存会话并返回 answer/sources
+  -> FastAPI 返回 JSON
+  -> 前端渲染回答和来源</code></pre>
+                <p>
+                    核心设计点是：这个代码库采用的是“模型驱动工具调用”的 RAG。后端提供搜索能力，但是否搜索、搜索什么关键词、是否带课程名或 lesson 编号，由模型根据用户问题决定。
+                </p>
+            </section>
+        </article>
+    </main>
+    <script>
+        const tabButtons = document.querySelectorAll('.doc-tab');
+        const docSections = document.querySelectorAll('.doc-section');
+
+        tabButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const targetId = button.dataset.target;
+
+                tabButtons.forEach((tab) => {
+                    const isActive = tab === button;
+                    tab.classList.toggle('active', isActive);
+                    tab.setAttribute('aria-selected', String(isActive));
+                });
+
+                docSections.forEach((section) => {
+                    section.classList.toggle('active', section.id === targetId);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

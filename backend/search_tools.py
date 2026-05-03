@@ -8,7 +8,7 @@ class Tool(ABC):
     
     @abstractmethod
     def get_tool_definition(self) -> Dict[str, Any]:
-        """Return Anthropic tool definition for this tool"""
+        """Return a tool definition for this tool"""
         pass
     
     @abstractmethod
@@ -25,7 +25,7 @@ class CourseSearchTool(Tool):
         self.last_sources = []  # Track sources from last search
     
     def get_tool_definition(self) -> Dict[str, Any]:
-        """Return Anthropic tool definition for this tool"""
+        """Return a tool definition for this tool"""
         return {
             "name": "search_course_content",
             "description": "Search course materials with smart course name matching and lesson filtering",
@@ -129,7 +129,7 @@ class ToolManager:
 
     
     def get_tool_definitions(self) -> list:
-        """Get all tool definitions for Anthropic tool calling"""
+        """Get all tool definitions for AI tool calling"""
         return [tool.get_tool_definition() for tool in self.tools.values()]
     
     def execute_tool(self, tool_name: str, **kwargs) -> str:
