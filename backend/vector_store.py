@@ -187,6 +187,24 @@ class VectorStore:
             metadatas=metadatas,
             ids=ids
         )
+
+    def upsert_course(self, course: Course, chunks: List[CourseChunk]):
+        """Replace existing data for a course title, then add fresh data."""
+        self._delete_course(course.title)
+        self.add_course_metadata(course)
+        self.add_course_content(chunks)
+
+    def _delete_course(self, course_title: str):
+        """Delete catalog metadata and content chunks for a course title."""
+        catalog_results = self.course_catalog.get(ids=[course_title])
+        catalog_ids = catalog_results.get("ids", []) if catalog_results else []
+        if catalog_ids:
+            self.course_catalog.delete(ids=catalog_ids)
+
+        content_results = self.course_content.get(where={"course_title": course_title})
+        content_ids = content_results.get("ids", []) if content_results else []
+        if content_ids:
+            self.course_content.delete(ids=content_ids)
     
     def clear_all_data(self):
         """Clear all data from both collections"""

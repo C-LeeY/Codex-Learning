@@ -57,11 +57,8 @@ class RAGSystem:
             # Process the document
             course, course_chunks = self.document_processor.process_course_document(file_path)
             
-            # Add course metadata to vector store for semantic search
-            self.vector_store.add_course_metadata(course)
-            
-            # Add course content chunks to vector store
-            self.vector_store.add_course_content(course_chunks)
+            # Replace stale metadata/content for this title with the parsed document.
+            self.vector_store.upsert_course(course, course_chunks)
             
             return course, len(course_chunks)
         except Exception as e:
@@ -103,16 +100,13 @@ class RAGSystem:
                     # We'll process the document to get the course ID, but only add if new
                     course, course_chunks = self.document_processor.process_course_document(file_path)
                     
-                    if course and course.title not in existing_course_titles:
-                        # This is a new course - add it to the vector store
-                        self.vector_store.add_course_metadata(course)
-                        self.vector_store.add_course_content(course_chunks)
+                    if course:
+                        self.vector_store.upsert_course(course, course_chunks)
                         total_courses += 1
                         total_chunks += len(course_chunks)
-                        print(f"Added new course: {course.title} ({len(course_chunks)} chunks)")
+                        action = "Refreshed" if course.title in existing_course_titles else "Added new"
+                        print(f"{action} course: {course.title} ({len(course_chunks)} chunks)")
                         existing_course_titles.add(course.title)
-                    elif course:
-                        print(f"Course already exists: {course.title} - skipping")
                 except Exception as e:
                     print(f"Error processing {file_name}: {e}")
         
