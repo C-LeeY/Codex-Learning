@@ -46,12 +46,32 @@ class QueryResponse(BaseModel):
     sources: List[str]
     session_id: str
 
+class SessionRequest(BaseModel):
+    """Request model for starting a new chat session"""
+    session_id: Optional[str] = None
+
+class SessionResponse(BaseModel):
+    """Response model for chat session creation"""
+    session_id: str
+
 class CourseStats(BaseModel):
     """Response model for course statistics"""
     total_courses: int
     course_titles: List[str]
 
 # API Endpoints
+
+@app.post("/api/session", response_model=SessionResponse)
+async def create_session(request: SessionRequest):
+    """Start a new chat session and clear any previous session history"""
+    try:
+        if request.session_id:
+            rag_system.session_manager.clear_session(request.session_id)
+
+        session_id = rag_system.session_manager.create_session()
+        return SessionResponse(session_id=session_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/query", response_model=QueryResponse)
 async def query_documents(request: QueryRequest):

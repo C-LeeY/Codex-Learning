@@ -5,6 +5,9 @@ from dataclasses import dataclass
 from models import Course, CourseChunk
 from sentence_transformers import SentenceTransformer
 
+COURSE_OUTLINE_MATCH_MAX_DISTANCE = 1.7
+
+
 @dataclass
 class SearchResults:
     """Container for search results with metadata"""
@@ -99,7 +102,7 @@ class VectorStore:
         except Exception as e:
             return SearchResults.empty(f"Search error: {str(e)}")
     
-    def _resolve_course_name(self, course_name: str) -> Optional[str]:
+    def _resolve_course_name(self, course_name: str, max_distance: Optional[float] = None) -> Optional[str]:
         """Use vector search to find best matching course by name"""
         try:
             results = self.course_catalog.query(
@@ -108,6 +111,12 @@ class VectorStore:
             )
             
             if results['documents'][0] and results['metadatas'][0]:
+                if max_distance is not None:
+                    distances = results.get('distances') or [[]]
+                    distance = distances[0][0] if distances and distances[0] else None
+                    if distance is not None and distance > max_distance:
+                        return None
+
                 # Return the title (which is now the ID)
                 return results['metadatas'][0][0]['title']
         except Exception as e:
@@ -232,6 +241,35 @@ class VectorStore:
         except Exception as e:
             print(f"Error getting courses metadata: {e}")
             return []
+
+    def get_course_outline(self, course_name: str) -> Dict[str, Any]:
+        """Get course outline metadata for a course title or partial title."""
+        import json
+
+        try:
+            course_title = self._resolve_course_name(
+                course_name,
+                max_distance=COURSE_OUTLINE_MATCH_MAX_DISTANCE
+            )
+            if not course_title:
+                return {"error": f"No course found matching '{course_name}'"}
+
+            results = self.course_catalog.get(ids=[course_title])
+            if not results or not results.get('metadatas'):
+                return {"error": f"No course found matching '{course_name}'"}
+
+            metadata = results['metadatas'][0]
+            lessons_json = metadata.get('lessons_json') or "[]"
+            lessons = json.loads(lessons_json)
+            lessons.sort(key=lambda lesson: lesson.get('lesson_number') or 0)
+
+            return {
+                "title": metadata.get('title', course_title),
+                "course_link": metadata.get('course_link'),
+                "lessons": lessons
+            }
+        except Exception as e:
+            return {"error": f"Course outline lookup error: {str(e)}"}
 
     def get_course_link(self, course_title: str) -> Optional[str]:
         """Get course link for a given course title"""

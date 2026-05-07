@@ -4,8 +4,21 @@ from document_processor import DocumentProcessor
 from vector_store import VectorStore
 from ai_generator import AIGenerator
 from session_manager import SessionManager
-from search_tools import ToolManager, CourseSearchTool
+from search_tools import ToolManager, CourseSearchTool, CourseOutlineTool
 from models import Course, Lesson, CourseChunk
+
+OUTLINE_QUERY_TERMS = (
+    "outline",
+    "syllabus",
+    "curriculum",
+    "course structure",
+    "lesson list",
+    "list of lessons",
+    "what lessons",
+    "which lessons",
+    "modules",
+)
+
 
 class RAGSystem:
     """Main orchestrator for the Retrieval-Augmented Generation system"""
@@ -26,7 +39,9 @@ class RAGSystem:
         # Initialize search tools
         self.tool_manager = ToolManager()
         self.search_tool = CourseSearchTool(self.vector_store)
+        self.outline_tool = CourseOutlineTool(self.vector_store)
         self.tool_manager.register_tool(self.search_tool)
+        self.tool_manager.register_tool(self.outline_tool)
     
     def add_course_document(self, file_path: str) -> Tuple[Course, int]:
         """
@@ -114,6 +129,19 @@ class RAGSystem:
         Returns:
             Tuple of (response, sources list - empty for tool-based approach)
         """
+        if self._is_outline_query(query):
+            response = self.tool_manager.execute_tool(
+                "get_course_outline",
+                course_name=query
+            )
+            sources = self.tool_manager.get_last_sources()
+            self.tool_manager.reset_sources()
+
+            if session_id:
+                self.session_manager.add_exchange(session_id, query, response)
+
+            return response, sources
+
         # Create prompt for the AI with clear instructions
         prompt = f"""Answer this question about course materials: {query}"""
         
@@ -142,6 +170,11 @@ class RAGSystem:
         
         # Return response with sources from tool searches
         return response, sources
+
+    def _is_outline_query(self, query: str) -> bool:
+        """Return True when a query is asking for course-level structure."""
+        normalized_query = query.lower()
+        return any(term in normalized_query for term in OUTLINE_QUERY_TERMS)
     
     def get_course_analytics(self) -> Dict:
         """Get analytics about the course catalog"""

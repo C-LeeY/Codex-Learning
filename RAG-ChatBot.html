@@ -276,18 +276,48 @@
                 <li>包管理：<code>uv</code></li>
             </ul>
 
-            <h2>启动过程</h2>
+            <h2>运行步骤</h2>
             <p>
-                启动脚本位于 <span class="path">run.sh</span>。它会进入 <code>backend</code> 目录，然后运行：
+                运行这个代码库时，需要先准备 Python 3.13、<code>uv</code> 和智谱 API Key，然后从项目根目录同步依赖并启动 FastAPI 服务。后端会同时提供 API 和静态前端页面。
             </p>
-            <pre><code>uv run uvicorn app:app --reload --port 8000</code></pre>
+            <ol>
+                <li>进入项目根目录：</li>
+            </ol>
+            <pre><code>cd d:\Projects\CodexProjects\RAG-Chatbot</code></pre>
+            <ol start="2">
+                <li>确认 Python 与包管理工具。项目通过 <span class="path">.python-version</span> 指定 <code>3.13</code>，依赖由 <code>uv</code> 管理；如果 <code>uv</code> 不在 PATH 中，可使用 <code>python -m uv</code>。</li>
+                <li>安装或同步依赖：</li>
+            </ol>
+            <pre><code>python -m uv sync</code></pre>
             <p>
-                真正的 FastAPI 入口是 <span class="path">backend/app.py</span>。服务启动后，会执行 <code>startup_event()</code>，扫描 <code>../docs</code> 并把课程资料加载到向量库：
+                该命令会根据 <span class="path">uv.lock</span> 创建 <span class="path">.venv</span>，并安装 FastAPI、Uvicorn、ChromaDB、sentence-transformers 等依赖。首次执行时可能会下载 Python 3.13、依赖包和 embedding 模型相关缓存。
             </p>
-            <pre><code>docs_path = "../docs"
-courses, chunks = rag_system.add_course_folder(docs_path, clear_existing=False)</code></pre>
+            <ol start="4">
+                <li>配置环境变量。复制 <span class="path">.env.example</span> 为 <span class="path">.env</span>，至少填写 <code>ZHIPU_API_KEY</code>：</li>
+            </ol>
+            <pre><code>ZHIPU_API_KEY=your_zhipu_api_key_here
+ZHIPU_MODEL=glm-4-flash</code></pre>
+            <ol start="5">
+                <li>启动项目。Windows 使用 Git Bash 时，可以运行根目录脚本：</li>
+            </ol>
+            <pre><code>./run.sh</code></pre>
+            <p>PowerShell 中也可以手动进入后端目录启动：</p>
+            <pre><code>cd backend
+..\.venv\Scripts\python.exe -m uvicorn app:app --reload --port 8000</code></pre>
+            <ol start="6">
+                <li>等待服务完成初始化。启动时 <span class="path">backend/app.py</span> 会创建 <code>RAGSystem</code>，并在 <code>startup_event()</code> 中读取 <span class="path">docs/</span> 里的课程文本，写入或复用 ChromaDB 向量库。</li>
+                <li>打开页面或 API 文档：</li>
+            </ol>
+            <ul>
+                <li>Web 界面：<code>http://localhost:8000/</code></li>
+                <li>API 文档：<code>http://localhost:8000/docs</code></li>
+            </ul>
+            <ol start="8">
+                <li>验证服务是否正常。浏览器访问 <code>http://localhost:8000/api/courses</code>，或在 PowerShell 中执行：</li>
+            </ol>
+            <pre><code>Invoke-WebRequest -Uri http://127.0.0.1:8000/api/courses -UseBasicParsing</code></pre>
             <p>
-                <code>clear_existing=False</code> 表示不会每次启动都清空重建向量库，而是跳过已经存在的课程。
+                正常响应会包含 <code>total_courses</code> 和 <code>course_titles</code>。如果前端页面能打开、课程接口返回 200，说明后端、静态文件托管和课程加载流程已经基本可用。
             </p>
 
             <h2>核心请求链路</h2>

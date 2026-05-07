@@ -4,3 +4,17 @@ Course already exists: MCP: Build Rich-Context AI Apps with Anthropic - skipping
 Course already exists: Advanced Retrieval for AI with Chroma - skipping
 Course already exists: Prompt Compression and Query Optimization - skipping
 Loaded 0 courses with 0 chunks
+INFO:     127.0.0.1:61646 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50809 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62402 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62402 - "GET /style.css?v=11 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54555 - "GET /script.js?v=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54555 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62402 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62402 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:62402 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62402 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62402 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62402 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62402 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "POST /api/query HTTP/1.1" 200 OK

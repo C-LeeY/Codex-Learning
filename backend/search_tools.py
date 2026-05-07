@@ -1,3 +1,4 @@
+import html
 from typing import Dict, Any, Optional, Protocol
 from abc import ABC, abstractmethod
 from vector_store import VectorStore, SearchResults
@@ -100,10 +101,21 @@ class CourseSearchTool(Tool):
                 header += f" - Lesson {lesson_num}"
             header += "]"
             
-            # Track source for the UI
-            source = course_title
+            # Track source for the UI. Sources are rendered as HTML by the
+            # frontend, so labels and URLs must be escaped here.
+            source_label = course_title
             if lesson_num is not None:
-                source += f" - Lesson {lesson_num}"
+                source_label += f" - Lesson {lesson_num}"
+
+            source = html.escape(source_label)
+            if lesson_num is not None:
+                lesson_link = self.store.get_lesson_link(course_title, lesson_num)
+                if lesson_link:
+                    safe_url = html.escape(lesson_link, quote=True)
+                    source = (
+                        f'<a href="{safe_url}" target="_blank" '
+                        f'rel="noopener noreferrer">{source}</a>'
+                    )
             sources.append(source)
             
             formatted.append(f"{header}\n{doc}")
@@ -112,6 +124,81 @@ class CourseSearchTool(Tool):
         self.last_sources = sources
         
         return "\n\n".join(formatted)
+
+
+class CourseOutlineTool(Tool):
+    """Tool for retrieving course outlines from course metadata."""
+
+    def __init__(self, vector_store: VectorStore):
+        self.store = vector_store
+        self.last_sources = []
+
+    def get_tool_definition(self) -> Dict[str, Any]:
+        """Return a tool definition for this tool"""
+        return {
+            "name": "get_course_outline",
+            "description": (
+                "Get a course outline, syllabus, curriculum, or lesson list "
+                "from course metadata using a course title or partial title"
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "course_name": {
+                        "type": "string",
+                        "description": "Course title or partial title (e.g. 'MCP', 'Introduction')"
+                    }
+                },
+                "required": ["course_name"]
+            }
+        }
+
+    def execute(self, course_name: str) -> str:
+        """
+        Execute the outline tool with a course title or partial title.
+
+        Args:
+            course_name: Course title or partial title
+
+        Returns:
+            Formatted course outline or error message
+        """
+        outline = self.store.get_course_outline(course_name)
+        if outline.get("error"):
+            return outline["error"]
+
+        course_title = outline.get("title", "Unknown course")
+        course_link = outline.get("course_link") or "Not available"
+        lessons = sorted(
+            outline.get("lessons", []),
+            key=lambda lesson: lesson.get("lesson_number") or 0
+        )
+
+        source = html.escape(course_title)
+        if outline.get("course_link"):
+            safe_url = html.escape(outline["course_link"], quote=True)
+            source = (
+                f'<a href="{safe_url}" target="_blank" '
+                f'rel="noopener noreferrer">{source}</a>'
+            )
+        self.last_sources = [source]
+
+        formatted = [
+            f"Course Title: {course_title}",
+            f"Course Link: {course_link}",
+            "Lessons:"
+        ]
+
+        if not lessons:
+            formatted.append("No lessons found.")
+        else:
+            for lesson in lessons:
+                lesson_number = lesson.get("lesson_number")
+                lesson_title = lesson.get("lesson_title", "Untitled lesson")
+                formatted.append(f"Lesson {lesson_number}: {lesson_title}")
+
+        return "\n".join(formatted)
+
 
 class ToolManager:
     """Manages available tools for the AI"""

@@ -1,11 +1,62 @@
-// API base URL - use relative path to work from any host
-const API_URL = '/api';
+// API base URL candidates. Same-origin works when FastAPI serves the frontend;
+// localhost fallbacks keep the UI working when opened from a static server.
+const API_BASE_CANDIDATES = getApiBaseCandidates();
+let activeApiBase = null;
 
 // Global state
 let currentSessionId = null;
+let activeQueryController = null;
+let chatVersion = 0;
 
 // DOM elements
-let chatMessages, chatInput, sendButton, totalCourses, courseTitles;
+let chatMessages, chatInput, sendButton, newChatButton, totalCourses, courseTitles;
+
+function getApiBaseCandidates() {
+    const candidates = [];
+
+    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+        candidates.push(`${window.location.origin}/api`);
+    }
+
+    candidates.push(
+        'http://localhost:8000/api',
+        'http://127.0.0.1:8000/api',
+        'http://localhost:8001/api',
+        'http://127.0.0.1:8001/api'
+    );
+
+    return [...new Set(candidates)];
+}
+
+function shouldTryNextApiBase(response) {
+    return response.status === 404 || response.status === 405;
+}
+
+async function apiFetch(path, options = {}) {
+    const bases = activeApiBase
+        ? [activeApiBase, ...API_BASE_CANDIDATES.filter(base => base !== activeApiBase)]
+        : API_BASE_CANDIDATES;
+    let lastError = null;
+
+    for (const base of bases) {
+        try {
+            const response = await fetch(`${base}${path}`, options);
+
+            if (shouldTryNextApiBase(response)) {
+                lastError = new Error(`API endpoint unavailable at ${base}`);
+                continue;
+            }
+
+            activeApiBase = base;
+            return response;
+        } catch (error) {
+            if (error.name === 'AbortError') throw error;
+            lastError = error;
+        }
+    }
+
+    throw lastError || new Error('Failed to connect to the API');
+}
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -13,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     chatMessages = document.getElementById('chatMessages');
     chatInput = document.getElementById('chatInput');
     sendButton = document.getElementById('sendButton');
+    newChatButton = document.getElementById('newChatButton');
     totalCourses = document.getElementById('totalCourses');
     courseTitles = document.getElementById('courseTitles');
     
@@ -25,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupEventListeners() {
     // Chat functionality
     sendButton.addEventListener('click', sendMessage);
+    newChatButton.addEventListener('click', createNewSession);
     chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
@@ -43,13 +96,26 @@ function setupEventListeners() {
 
 // Chat Functions
 async function sendMessage() {
+    if (chatInput.disabled || sendButton.disabled) return;
+
     const query = chatInput.value.trim();
     if (!query) return;
+    if (!currentSessionId) {
+        try {
+            currentSessionId = await startBackendSession(null);
+        } catch (error) {
+            addMessage(`Error: ${error.message}`, 'assistant');
+            return;
+        }
+    }
 
     // Disable input
     chatInput.value = '';
     chatInput.disabled = true;
     sendButton.disabled = true;
+    const requestSessionId = currentSessionId;
+    const requestChatVersion = chatVersion;
+    activeQueryController = new AbortController();
 
     // Add user message
     addMessage(query, 'user');
@@ -60,24 +126,25 @@ async function sendMessage() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
     try {
-        const response = await fetch(`${API_URL}/query`, {
+        const response = await apiFetch('/query', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 query: query,
-                session_id: currentSessionId
-            })
+                session_id: requestSessionId
+            }),
+            signal: activeQueryController.signal
         });
 
         if (!response.ok) throw new Error('Query failed');
 
         const data = await response.json();
-        
-        // Update session ID if new
-        if (!currentSessionId) {
-            currentSessionId = data.session_id;
+
+        if (requestChatVersion !== chatVersion || data.session_id !== currentSessionId) {
+            loadingMessage.remove();
+            return;
         }
 
         // Replace loading message with response
@@ -85,13 +152,28 @@ async function sendMessage() {
         addMessage(data.answer, 'assistant', data.sources);
 
     } catch (error) {
+        if (error.name === 'AbortError') {
+            loadingMessage.remove();
+            return;
+        }
+
+        if (requestChatVersion !== chatVersion || requestSessionId !== currentSessionId) {
+            loadingMessage.remove();
+            return;
+        }
+
         // Replace loading message with error
         loadingMessage.remove();
         addMessage(`Error: ${error.message}`, 'assistant');
     } finally {
-        chatInput.disabled = false;
-        sendButton.disabled = false;
-        chatInput.focus();
+        if (activeQueryController && activeQueryController.signal.aborted) {
+            activeQueryController = null;
+        } else if (requestChatVersion === chatVersion && requestSessionId === currentSessionId) {
+            activeQueryController = null;
+            chatInput.disabled = false;
+            sendButton.disabled = false;
+            chatInput.focus();
+        }
     }
 }
 
@@ -122,10 +204,14 @@ function addMessage(content, type, sources = null, isWelcome = false) {
     let html = `<div class="message-content">${displayContent}</div>`;
     
     if (sources && sources.length > 0) {
+        const sourceItems = sources
+            .map(source => `<span class="source-chip">${source}</span>`)
+            .join('');
+
         html += `
             <details class="sources-collapsible">
                 <summary class="sources-header">Sources</summary>
-                <div class="sources-content">${sources.join(', ')}</div>
+                <div class="sources-content">${sourceItems}</div>
             </details>
         `;
     }
@@ -146,17 +232,64 @@ function escapeHtml(text) {
 
 // Removed removeMessage function - no longer needed since we handle loading differently
 
-async function createNewSession() {
-    currentSessionId = null;
+async function startBackendSession(previousSessionId) {
+    const response = await apiFetch('/session', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            session_id: previousSessionId
+        })
+    });
+
+    if (!response.ok) throw new Error('Failed to start new session');
+
+    const data = await response.json();
+    return data.session_id;
+}
+
+function resetChatWindow() {
     chatMessages.innerHTML = '';
     addMessage('Welcome to the Course Materials Assistant! I can help you with questions about courses, lessons and specific content. What would you like to know?', 'assistant', null, true);
+}
+
+async function createNewSession() {
+    const previousSessionId = currentSessionId;
+    const nextChatVersion = chatVersion + 1;
+    chatVersion = nextChatVersion;
+
+    if (activeQueryController) {
+        activeQueryController.abort();
+        activeQueryController = null;
+    }
+
+    chatInput.value = '';
+    chatInput.disabled = true;
+    sendButton.disabled = true;
+    newChatButton.disabled = true;
+
+    try {
+        currentSessionId = await startBackendSession(previousSessionId);
+    } catch (error) {
+        console.error('Error creating new session:', error);
+        currentSessionId = null;
+    } finally {
+        if (nextChatVersion === chatVersion) {
+            resetChatWindow();
+            chatInput.disabled = false;
+            sendButton.disabled = false;
+            newChatButton.disabled = false;
+            chatInput.focus();
+        }
+    }
 }
 
 // Load course statistics
 async function loadCourseStats() {
     try {
         console.log('Loading course stats...');
-        const response = await fetch(`${API_URL}/courses`);
+        const response = await apiFetch('/courses');
         if (!response.ok) throw new Error('Failed to load course stats');
         
         const data = await response.json();

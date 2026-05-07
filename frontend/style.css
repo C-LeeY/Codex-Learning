@@ -241,8 +241,54 @@ header h1 {
 }
 
 .sources-content {
-    padding: 0 0.5rem 0.25rem 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem 0.25rem 1.5rem;
     color: var(--text-secondary);
+}
+
+.source-chip {
+    display: inline-flex;
+    align-items: center;
+    max-width: min(100%, 34rem);
+    min-height: 2rem;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.38);
+    color: var(--text-secondary);
+    line-height: 1.25;
+}
+
+.source-chip a {
+    display: inline-block;
+    max-width: 100%;
+    color: #bfdbfe;
+    overflow: hidden;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.source-chip:has(a) {
+    border-color: rgba(96, 165, 250, 0.36);
+    background: rgba(37, 99, 235, 0.14);
+}
+
+.source-chip:hover {
+    border-color: rgba(147, 197, 253, 0.72);
+    background: rgba(37, 99, 235, 0.22);
+}
+
+.source-chip a:hover {
+    color: #dbeafe;
+}
+
+.source-chip a:focus-visible {
+    outline: 2px solid rgba(147, 197, 253, 0.8);
+    outline-offset: 3px;
+    border-radius: 999px;
 }
 
 /* Markdown formatting styles */
@@ -446,14 +492,18 @@ header h1 {
 }
 
 /* Sidebar Headers */
+.new-chat-button,
 .stats-header,
 .suggested-header {
+    font-family: inherit;
     font-size: 0.875rem;
     font-weight: 600;
+    line-height: 1.6;
     color: var(--text-secondary);
     cursor: pointer;
     padding: 0.5rem 0;
-    border: none;
+    border: 0;
+    border-radius: 0;
     background: none;
     list-style: none;
     outline: none;
@@ -462,11 +512,32 @@ header h1 {
     letter-spacing: 0.5px;
 }
 
+.new-chat-button {
+    appearance: none;
+    -webkit-appearance: none;
+    display: block;
+    margin: 0;
+    padding-left: 0;
+    width: 100%;
+    text-align: left;
+}
+
+.new-chat-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.new-chat-button:disabled:hover {
+    color: var(--text-secondary);
+}
+
+.new-chat-button:focus,
 .stats-header:focus,
 .suggested-header:focus {
     color: var(--primary-color);
 }
 
+.new-chat-button:hover:not(:disabled),
 .stats-header:hover,
 .suggested-header:hover {
     color: var(--primary-color);
