@@ -4,3 +4,11 @@ INFO:     Started reloader process [43316] using WatchFiles
 INFO:     Started server process [43308]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'search_tools.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43308]
+INFO:     Started server process [58232]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

@@ -120,8 +120,9 @@ class CourseSearchTool(Tool):
             
             formatted.append(f"{header}\n{doc}")
         
-        # Store sources for retrieval
-        self.last_sources = sources
+        # Store sources for retrieval, preserving first-seen order while
+        # avoiding duplicate chips when multiple chunks share a citation.
+        self.last_sources = list(dict.fromkeys(sources))
         
         return "\n\n".join(formatted)
 

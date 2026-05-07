@@ -203,8 +203,10 @@ function addMessage(content, type, sources = null, isWelcome = false) {
     
     let html = `<div class="message-content">${displayContent}</div>`;
     
-    if (sources && sources.length > 0) {
-        const sourceItems = sources
+    const uniqueSources = sources ? [...new Set(sources)] : [];
+
+    if (uniqueSources.length > 0) {
+        const sourceItems = uniqueSources
             .map(source => `<span class="source-chip">${source}</span>`)
             .join('');
 
