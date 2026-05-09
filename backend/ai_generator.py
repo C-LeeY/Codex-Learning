@@ -7,13 +7,16 @@ import httpx
 class AIGenerator:
     """Handles interactions with Zhipu AI's OpenAI-compatible chat API."""
 
+    MAX_TOOL_ROUNDS = 2
+
     # Static system prompt to avoid rebuilding on each call
     SYSTEM_PROMPT = """ You are an AI assistant specialized in course materials and educational content with access to course information tools.
 
 Search Tool Usage:
 - Use `search_course_content` only for questions about specific course content or detailed educational materials
 - Use `get_course_outline` for outline-related questions, including course outline, syllabus, curriculum, course structure, modules, lesson list, or what lessons are in a course
-- **One tool call per query maximum**
+- You may use tools sequentially when needed, up to two tool-calling rounds per user query
+- Use the result of one tool call to decide whether a second tool call is necessary
 - Synthesize tool results into accurate, fact-based responses
 - If a tool yields no results, state this clearly without offering alternatives
 
@@ -85,44 +88,43 @@ Provide only the direct answer to what was asked.
             {"role": "user", "content": query},
         ]
 
-        api_params = {
+        if not tools or not tool_manager:
+            response_message = self._create_chat_completion({
+                **self.base_params,
+                "messages": messages,
+            })
+            return response_message.get("content", "")
+
+        openai_tools = self._to_openai_tools(tools)
+
+        for _ in range(self.MAX_TOOL_ROUNDS):
+            response_message = self._create_chat_completion({
+                **self.base_params,
+                "messages": messages,
+                "tools": openai_tools,
+                "tool_choice": "auto",
+            })
+
+            tool_calls = response_message.get("tool_calls") or []
+            if not tool_calls:
+                return response_message.get("content", "")
+
+            messages.append(response_message)
+            try:
+                self._append_tool_results(messages, tool_calls, tool_manager)
+            except Exception:
+                return "I couldn't complete the tool lookup needed to answer this question. Please try again."
+
+        final_message = self._create_chat_completion({
             **self.base_params,
             "messages": messages,
-        }
+        })
+        return final_message.get("content", "")
 
-        # Add tools if available
-        if tools:
-            api_params["tools"] = self._to_openai_tools(tools)
-            api_params["tool_choice"] = "auto"
-
-        # Get response from Zhipu AI
-        response_message = self._create_chat_completion(api_params)
-
-        # Handle tool execution if needed
-        if response_message.get("tool_calls") and tool_manager:
-            return self._handle_tool_execution(response_message, api_params, tool_manager)
-
-        # Return direct response
-        return response_message.get("content", "")
-
-    def _handle_tool_execution(self, initial_message: Dict[str, Any],
-                               base_params: Dict[str, Any], tool_manager):
-        """
-        Handle execution of tool calls and get follow-up response.
-
-        Args:
-            initial_message: The response containing tool call requests
-            base_params: Base API parameters
-            tool_manager: Manager to execute tools
-
-        Returns:
-            Final response text after tool execution
-        """
-        messages = base_params["messages"].copy()
-        messages.append(initial_message)
-
-        # Execute all tool calls and collect results
-        for tool_call in initial_message.get("tool_calls", []):
+    def _append_tool_results(self, messages: List[Dict[str, Any]],
+                             tool_calls: List[Dict[str, Any]], tool_manager) -> None:
+        """Execute tool calls and append their results to the message history."""
+        for tool_call in tool_calls:
             function = tool_call.get("function", {})
             tool_name = function.get("name")
             tool_args = self._parse_tool_arguments(function.get("arguments", "{}"))
@@ -134,16 +136,6 @@ Provide only the direct answer to what was asked.
                 "tool_call_id": tool_call.get("id"),
                 "content": tool_result,
             })
-
-        # Prepare final API call without tools
-        final_params = {
-            **self.base_params,
-            "messages": messages,
-        }
-
-        # Get final response
-        final_message = self._create_chat_completion(final_params)
-        return final_message.get("content", "")
 
     def _create_chat_completion(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         response = self.client.post(self.base_url, json=payload)
