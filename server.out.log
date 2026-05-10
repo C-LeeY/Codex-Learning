@@ -4,12 +4,113 @@ Refreshed course: MCP: Build Rich-Context AI Apps with Anthropic (164 chunks)
 Refreshed course: Advanced Retrieval for AI with Chroma (90 chunks)
 Refreshed course: Prompt Compression and Query Optimization (121 chunks)
 Loaded 4 courses with 528 chunks
-INFO:     127.0.0.1:62816 - "GET /docs HTTP/1.1" 200 OK
-INFO:     127.0.0.1:62817 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54485 - "POST /api/session HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53646 - "GET /api/courses HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53646 - "POST /api/query HTTP/1.1" 200 OK
-INFO:     127.0.0.1:62359 - "POST /api/query HTTP/1.1" 200 OK
-INFO:     127.0.0.1:62359 - "POST /api/query HTTP/1.1" 200 OK
-INFO:     127.0.0.1:62359 - "POST /api/query HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55392 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58988 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58992 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59000 - "HEAD / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59004 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54046 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54046 - "GET /style.css?v=11 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53713 - "GET /script.js?v=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53713 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54046 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54046 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:63913 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63913 - "POST /api/session HTTP/1.1" 200 OK
+  Loading initial documents...
+Refreshed course: Building Towards Computer Use with Anthropic (153 chunks)
+Refreshed course: MCP: Build Rich-Context AI Apps with Anthropic (164 chunks)
+Refreshed course: Advanced Retrieval for AI with Chroma (90 chunks)
+Refreshed course: Prompt Compression and Query Optimization (121 chunks)
+Loaded 4 courses with 528 chunks
+Loading initial documents...
+Refreshed course: Building Towards Computer Use with Anthropic (153 chunks)
+Refreshed course: MCP: Build Rich-Context AI Apps with Anthropic (164 chunks)
+Refreshed course: Advanced Retrieval for AI with Chroma (90 chunks)
+Refreshed course: Prompt Compression and Query Optimization (121 chunks)
+Loaded 4 courses with 528 chunks
+INFO:     127.0.0.1:59188 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49597 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58408 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51902 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64337 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56431 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57015 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53615 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53615 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62965 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62965 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55397 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55397 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55397 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55397 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57309 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49325 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51026 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63744 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50856 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55207 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54023 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50231 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50231 - "GET /style.css?v=11 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64906 - "GET /script.js?v=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64906 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50231 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50231 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53493 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53493 - "POST /api/query HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:59379 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56470 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54104 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58211 - "OPTIONS /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58096 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50999 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62506 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53468 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64297 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62732 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59166 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53563 - "GET / HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53563 - "GET /style.css?v=11 HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:63695 - "GET /script.js?v=10 HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:63695 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53563 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63695 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49890 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49890 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49890 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49890 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57614 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57614 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57614 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57614 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57614 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65439 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61789 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62657 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57105 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51709 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58969 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58969 - "GET /style.css?v=11 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63898 - "GET /script.js?v=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58969 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63898 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63898 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:52577 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60239 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53941 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52145 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55500 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51520 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62188 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61340 - "GET /api/courses HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61340 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54442 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54442 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54442 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54442 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54442 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50555 - "POST /api/session HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50555 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50555 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50555 - "POST /api/query HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50555 - "POST /api/query HTTP/1.1" 200 OK

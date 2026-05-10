@@ -26,4 +26,3 @@ Notes:
 - Write tests that verify the external behavior (API calls made, tools executed, results returned) rather than internal state details. 
 
 Use two parallel subagents to brainstorm possible plans. Do not implement any code.
-、
