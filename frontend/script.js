@@ -324,29 +324,56 @@ async function loadCourseStats() {
         }
     }
 }
-document.addEventListener('DOMContentLoaded', () => {
-    const themeToggle = document.querySelector('.theme-toggle');
-    if (!themeToggle) {
+
+const THEME_STORAGE_KEY = 'theme';
+
+function getInitialTheme() {
+    let savedTheme = null;
+
+    try {
+        savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    } catch (error) {
+        savedTheme = null;
+    }
+
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+        return savedTheme;
+    }
+
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+
+    const toggle = document.querySelector('.theme-toggle');
+    if (!toggle) {
         return;
     }
 
-    const storedTheme = localStorage.getItem('theme');
-    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-    const initialTheme = storedTheme || (prefersLight ? 'light' : 'dark');
+    const isLight = theme === 'light';
+    toggle.setAttribute('aria-pressed', String(isLight));
+    toggle.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
+    toggle.title = isLight ? 'Switch to dark theme' : 'Switch to light theme';
+}
 
-    const setTheme = (theme) => {
-        const isLight = theme === 'light';
-        document.body.dataset.theme = theme;
-        themeToggle.setAttribute('aria-pressed', String(isLight));
-        themeToggle.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
-        themeToggle.title = isLight ? 'Switch to dark theme' : 'Switch to light theme';
-        localStorage.setItem('theme', theme);
-    };
+function initializeThemeToggle() {
+    const toggle = document.querySelector('.theme-toggle');
+    if (!toggle) {
+        return;
+    }
 
-    setTheme(initialTheme);
+    applyTheme(getInitialTheme());
 
-    themeToggle.addEventListener('click', () => {
-        const nextTheme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
-        setTheme(nextTheme);
+    toggle.addEventListener('click', () => {
+        const nextTheme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+        try {
+            localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+        } catch (error) {
+            // Theme switching should keep working even when storage is unavailable.
+        }
+        applyTheme(nextTheme);
     });
-});
+}
+
+document.addEventListener('DOMContentLoaded', initializeThemeToggle);

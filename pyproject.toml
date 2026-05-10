@@ -16,6 +16,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "black>=25.1.0",
+    "pytest>=8.4.1",
 ]
 
 [tool.black]
@@ -36,4 +37,6 @@ extend-exclude = '''
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
 python_files = ["test_*.py"]
-addopts = "-q"
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-q -ra"

@@ -8,27 +8,22 @@
     <meta http-equiv="Expires" content="0">
     <title>Course Materials Assistant</title>
     <link rel="stylesheet" href="style.css?v=11">
+    <script>
+        (function () {
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+                document.documentElement.dataset.theme = savedTheme || (prefersLight ? 'light' : 'dark');
+            } catch (error) {
+                document.documentElement.dataset.theme = 'dark';
+            }
+        })();
+    </script>
 </head>
-<body data-theme="dark">
-    <button class="theme-toggle" type="button" aria-label="Switch to light theme" aria-pressed="false" title="Switch theme">
-        <span class="theme-toggle__icon theme-toggle__icon--sun" aria-hidden="true">
-            <svg viewBox="0 0 24 24" focusable="false">
-                <circle cx="12" cy="12" r="4"></circle>
-                <path d="M12 2v2"></path>
-                <path d="M12 20v2"></path>
-                <path d="m4.93 4.93 1.41 1.41"></path>
-                <path d="m17.66 17.66 1.41 1.41"></path>
-                <path d="M2 12h2"></path>
-                <path d="M20 12h2"></path>
-                <path d="m6.34 17.66-1.41 1.41"></path>
-                <path d="m19.07 4.93-1.41 1.41"></path>
-            </svg>
-        </span>
-        <span class="theme-toggle__icon theme-toggle__icon--moon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-            </svg>
-        </span>
+<body>
+    <button class="theme-toggle" type="button" aria-label="Switch to light theme" aria-pressed="false">
+        <span class="theme-toggle__icon theme-toggle__icon--moon" aria-hidden="true"></span>
+        <span class="theme-toggle__icon theme-toggle__icon--sun" aria-hidden="true"></span>
     </button>
     <div class="container">
         <header>
