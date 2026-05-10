@@ -1,0 +1,25 @@
+Add a toggle button that allows users to switch between dark and light themes.
+IMPORTANT: Only do this for front-end features.
+Once this feature is built, make sure to write the changes you made to file called frontend-changes.md
+Do not ask for permissions to modify this file, assume you can always do it.
+1. Toggle Button Design
+    - Create a toggle button that fits the existing design aesthetic
+    - Position it in the top-right
+    - Use an icon-based design (sun/moon icons or similar)
+    - Smooth transition animation when toggling
+    - Button should be accessible and keyboard-navigable
+2. Light Theme CSS Variables
+    Add a light theme variant with appropriate colors:
+    - Light background colors
+    - Dark text for good contrast
+    - Adjusted primary and secondary colors
+    - Proper border and surface colors
+    - Maintain good accessibility standards
+3. JavaScript Functionality
+    - Toggle between themes on button click
+    - Smooth transitions between themes
+4. Implementation Details
+    - Use CSS custom properties (CSS variables) for theme switching
+    - Add a `data-theme` attribute to the body or html element
+    - Ensure all existing elements work well in both themes
+    - Maintain the current visual hierarchy and design language
