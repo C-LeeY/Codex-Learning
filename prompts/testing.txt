@@ -1,0 +1,7 @@
+Enhance the existing testing framework for the RAG system in @backend/tests. The current tests cover unit components but are missing essential API testing infrastructure:
+
+- API endpoint tests - Test the FastAPI endpoints (/api/query, /api/courses, /) for proper request/response handling
+- pytest configuration - Add pytest.ini_options in pyproject.toml for cleaner test execution
+- Test fixtures - Create conftest.py with shared fixtures for mocking and test data setup
+
+The FastAPI app in backend/app.py mounts static files that don't exist in the test environment. Either create a separate test app or define the API endpoints inline in the test file to avoid import issues.

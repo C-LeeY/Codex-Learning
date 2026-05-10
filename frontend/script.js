@@ -324,3 +324,29 @@ async function loadCourseStats() {
         }
     }
 }
+document.addEventListener('DOMContentLoaded', () => {
+    const themeToggle = document.querySelector('.theme-toggle');
+    if (!themeToggle) {
+        return;
+    }
+
+    const storedTheme = localStorage.getItem('theme');
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    const initialTheme = storedTheme || (prefersLight ? 'light' : 'dark');
+
+    const setTheme = (theme) => {
+        const isLight = theme === 'light';
+        document.body.dataset.theme = theme;
+        themeToggle.setAttribute('aria-pressed', String(isLight));
+        themeToggle.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
+        themeToggle.title = isLight ? 'Switch to dark theme' : 'Switch to light theme';
+        localStorage.setItem('theme', theme);
+    };
+
+    setTheme(initialTheme);
+
+    themeToggle.addEventListener('click', () => {
+        const nextTheme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
+        setTheme(nextTheme);
+    });
+});
