@@ -32,3 +32,8 @@ extend-exclude = '''
   | htmlcov
 )/
 '''
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+python_files = ["test_*.py"]
+addopts = "-q"
