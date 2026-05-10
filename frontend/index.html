@@ -8,8 +8,23 @@
     <meta http-equiv="Expires" content="0">
     <title>Course Materials Assistant</title>
     <link rel="stylesheet" href="style.css?v=11">
+    <script>
+        (function () {
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+                document.documentElement.dataset.theme = savedTheme || (prefersLight ? 'light' : 'dark');
+            } catch (error) {
+                document.documentElement.dataset.theme = 'dark';
+            }
+        })();
+    </script>
 </head>
 <body>
+    <button class="theme-toggle" type="button" aria-label="Switch to light theme" aria-pressed="false">
+        <span class="theme-toggle__icon theme-toggle__icon--moon" aria-hidden="true"></span>
+        <span class="theme-toggle__icon theme-toggle__icon--sun" aria-hidden="true"></span>
+    </button>
     <div class="container">
         <header>
             <h1>Course Materials Assistant</h1>
